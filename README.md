@@ -1,5 +1,6 @@
 ## Dependencies
  jQuery.
+ Fontsawesome (I plan on removing this ofc).
 ## Markup:
 So far, it only supports images inside the main container. Of course I plan on changing that later.
   ```html
