@@ -14,11 +14,21 @@ $.fn.xexeuCarousel = function() {
         }
 
         function getSpacingProportions(container, element) {
-
-            //console.log(container, element);
+            console.log(element);
             if (container == element) return 0;
             var proportion = (container - element) * 0.5;
             return proportion;
+        }
+
+        function getOffsets(containerWidth, containerHeight, elements) {
+          var vertical = $.map(elements, function(value, index) {
+            return getSpacingProportions(containerHeight, $(value).height());
+          });
+          var horizontal = getSpacingProportions(containerWidth, $(elements[0]).width());
+          return {
+            verticalOffset: vertical,
+            horizontalOffset: horizontal
+          };
         }
 
         function instanceButtons(mainElement, rightHandler, leftHandler) {
@@ -41,15 +51,16 @@ $.fn.xexeuCarousel = function() {
                 'overflow':'hidden',
                 'height':String(mainHeight) + 'px',
                 'width':'inherit'
-            };
-
-            var elementsCss = {
-                'position':'absolute',
-                'top':String(verticalOffset) + 'px',
-                'left':String(horizontalOffset)+'px'
             }
             $(mainElement).css(mainCss);
-            $(elements).hide().css(elementsCss);
+            $.each(elements, function(index, value) {
+              var elementsCss = {
+                'position':'absolute',
+                'top':String(verticalOffset[index])+'px',
+                'left':String(horizontalOffset)+'px'
+              };
+              $(value).hide().css(elementsCss);
+            });
             $(elements[0]).show();
             $(mainElement).data('selected', String(0));
         }
@@ -72,10 +83,7 @@ $.fn.xexeuCarousel = function() {
                width:  $(mainElement).innerWidth(),
                height: tallerImageHeight
            }
-           var slidesOffsets = {
-               verticalOffset: getSpacingProportions(mainElementMeasures.height, $(elements).height()),
-               horizontalOffset: getSpacingProportions(mainElementMeasures.width, $(elements).width())
-           }
+           var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
               var centerValue = slidesOffsets.horizontalOffset;
               if (isTransitioning) return;
@@ -115,7 +123,7 @@ $.fn.xexeuCarousel = function() {
            initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset);
 
            function onResizeHandler() {
-
+               console.log("resized");
                mainElementMeasures.width = $(mainElement).innerWidth(),
                slidesOffsets = {
                    verticalOffset: getSpacingProportions(mainElementMeasures.height, $(elements).height()),
