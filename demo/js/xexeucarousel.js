@@ -93,33 +93,18 @@ $.fn.xexeuCarousel = function() {
               var containreWidth = mainElementMeasures.width;
               //console.log(containreWidth);
               var leavingElement = $(elements[currentElement--]);
-              leavingElement.animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false; leavingElement.hide();});//completed});
+              var leavingFinalPosition = $(leavingElement).width() + centerValue;
+              var entryingInitialPosition = leavingFinalPosition*-1;
+              leavingElement.animate({left: '+='+String(leavingFinalPosition+"px")}, 300, function(){isTransitioning = false; leavingElement.hide();});//completed});
               var numOfSlides = elements.length;
               if (currentElement < 0) {
                   currentElement = numOfSlides - 1;
               }
               $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(-containreWidth + centerValue+'px')}).animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
+              $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
            }
 
-           function rightButtonClickHandler() {
-              var centerValue = slidesOffsets.horizontalOffset[currentElement];
-               if (isTransitioning) {
-                   //console.log("vai retornar");
-                   return;
-               }
-              isTransitioning = true;
-               var containreWidth = mainElementMeasures.width;
-              //console.log("deu certo");
-              var numOfSlides = elements.length;
-              var leavingElement = $(elements[currentElement++]);
-              leavingElement.animate({left: '-='+String(containreWidth)}, 300, function(){isTransitioning = false; leavingElement.hide()});//completed});
-              if (currentElement >= numOfSlides) {
-                  currentElement = 0;
-              }
-              $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(containreWidth+centerValue)+'px'}).animate({left: '-='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
-           }
+           function rightButtonClickHandler() { }
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
            initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset);
