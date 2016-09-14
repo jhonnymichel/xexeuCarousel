@@ -101,25 +101,32 @@ $.fn.xexeuCarousel = function() {
                   currentElement = numOfSlides - 1;
               }
               $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
+              $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(leavingFinalPosition)}, 300, function(){isTransitioning = false;});//completed});
            }
 
            function rightButtonClickHandler() {
              var centerValue = slidesOffsets.horizontalOffset[currentElement];
              if (isTransitioning) return;
              isTransitioning = true;
-             var containreWidth = mainElementMeasures.width;
              //console.log(containreWidth);
              var leavingElement = $(elements[currentElement++]);
-             var leavingFinalPosition = ( $(leavingElement).width() + centerValue);
-             var entryingInitialPosition = leavingFinalPosition*-1;
-             leavingElement.animate({left: '+='+String(leavingFinalPosition+"px")}, 300, function(){isTransitioning = false; leavingElement.hide();});//completed});
+             var leavingFinalPosition = -( $(leavingElement).width() + centerValue);
+             leavingElement.animate({
+               left: '+='+String(leavingFinalPosition+"px")},
+               300,
+               function() {
+                 isTransitioning = false;
+                 leavingElement.hide();
+               });//completed});
+
              var numOfSlides = elements.length;
              if (currentElement >= numOfSlides) {
                  currentElement = 0;
              }
+             var entryingInitialPosition = leavingFinalPosition*-1;
+             var entryingfinalPosition = -(entryingInitialPosition) + slidesOffsets.horizontalOffset[currentElement];
              $(mainElement).data('selected', String(currentElement));
-             $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
+             $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(entryingfinalPosition)}, 300, function(){isTransitioning = false;});//completed});
 
            }
 
