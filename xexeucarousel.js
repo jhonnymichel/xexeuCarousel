@@ -2,11 +2,11 @@
 
 $.fn.xexeuCarousel = function() {
 
-        var buttonsStyle = {
-            color: "color: white",
-            positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
-            positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
-        };
+      var buttonsStyle = {
+          color: "color: white; padding: 20px; background: none; font-size: 40px; cursor: pointer;",
+          positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
+          positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
+      };
 
         var transitionStyle = {
             type: 'swipe',
@@ -35,8 +35,8 @@ $.fn.xexeuCarousel = function() {
 
         function instanceButtons(mainElement, rightHandler, leftHandler) {
 
-            var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
-            var buttonRight =  $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></button>");
+            var buttonLeft = $("<div class='xexeu-carousel-btn' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></div>");
+            var buttonRight =  $("<div class='xexeu-carousel-btn' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></div>");
 
             $(mainElement).append(buttonLeft);
             $(mainElement).append(buttonRight);
