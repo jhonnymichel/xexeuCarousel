@@ -87,36 +87,61 @@ $.fn.xexeuCarousel = function() {
            }
            var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
-              var centerValue = slidesOffsets.horizontalOffset[currentElement];
-              if (isTransitioning) return;
-              isTransitioning = true;
-              var containreWidth = mainElementMeasures.width;
-              //console.log(containreWidth);
-              var leavingElement = $(elements[currentElement--]);
-              var leavingFinalPosition = $(leavingElement).width() + centerValue;
-              var entryingInitialPosition = leavingFinalPosition*-1;
-              leavingElement.animate({left: '+='+String(leavingFinalPosition+"px")}, 300, function(){isTransitioning = false; leavingElement.hide();});//completed});
-              var numOfSlides = elements.length;
-              if (currentElement < 0) {
-                  currentElement = numOfSlides - 1;
-              }
-              $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(leavingFinalPosition)}, 300, function(){isTransitioning = false;});//completed});
+
+               if (isTransitioning) {
+                 return;
+               }
+               isTransitioning = true;
+
+               var centerValue = slidesOffsets.horizontalOffset[currentElement];
+               var leavingElement = $(elements[currentElement--]);
+               var leavingFinalPosition = $(leavingElement).width() + centerValue ;
+               leavingElement.animate({
+                 left: '+='+String(leavingFinalPosition+"px")},
+                 3000,
+                 function() {
+                   isTransitioning = false;
+                   //leavingElement.hide();
+                 });//completed});
+
+               var numOfSlides = elements.length;
+               if (currentElement < 0) {
+                   currentElement = elements.length - 1;
+               }
+               var entryingInitialPosition = (leavingFinalPosition*-1);
+               var entryingfinalPosition = leavingFinalPosition + slidesOffsets.horizontalOffset[currentElement];
+
+               $(mainElement).data('selected', String(currentElement));
+               $(elements[currentElement])
+                .show()
+                .css({
+                  'left':String(entryingInitialPosition+'px')
+                })
+                .animate({
+                  left: '+='+String(entryingfinalPosition)
+                  },
+                  3000,
+                  function(){
+                    isTransitioning = false;
+                  });//completed});
            }
 
            function rightButtonClickHandler() {
-             var centerValue = slidesOffsets.horizontalOffset[currentElement];
-             if (isTransitioning) return;
+
+             if (isTransitioning) {
+               return;
+             }
              isTransitioning = true;
-             //console.log(containreWidth);
+
+             var centerValue = slidesOffsets.horizontalOffset[currentElement];
              var leavingElement = $(elements[currentElement++]);
-             var leavingFinalPosition = -( $(leavingElement).width() + centerValue);
+             var leavingFinalPosition = -($(leavingElement).width() + centerValue);
              leavingElement.animate({
                left: '+='+String(leavingFinalPosition+"px")},
-               300,
+               3000,
                function() {
                  isTransitioning = false;
-                 leavingElement.hide();
+                 //leavingElement.hide();
                });//completed});
 
              var numOfSlides = elements.length;
@@ -124,9 +149,21 @@ $.fn.xexeuCarousel = function() {
                  currentElement = 0;
              }
              var entryingInitialPosition = leavingFinalPosition*-1;
-             var entryingfinalPosition = -(entryingInitialPosition) + slidesOffsets.horizontalOffset[currentElement];
+             var entryingfinalPosition = leavingFinalPosition + slidesOffsets.horizontalOffset[currentElement];
+
              $(mainElement).data('selected', String(currentElement));
-             $(elements[currentElement]).show().css({'left':String(entryingInitialPosition+'px')}).animate({left: '+='+String(entryingfinalPosition)}, 300, function(){isTransitioning = false;});//completed});
+             $(elements[currentElement])
+              .show()
+              .css({
+                'left':String(entryingInitialPosition+'px')
+              })
+              .animate({
+                left: '+='+String(entryingfinalPosition)
+                },
+                3000,
+                function(){
+                  isTransitioning = false;
+                });//completed});
 
            }
 
