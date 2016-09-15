@@ -14,11 +14,23 @@ $.fn.xexeuCarousel = function() {
         }
 
         function getSpacingProportions(container, element) {
-
-            //console.log(container, element);
+            console.log(element);
             if (container == element) return 0;
             var proportion = (container - element) * 0.5;
             return proportion;
+        }
+
+        function getOffsets(containerWidth, containerHeight, elements) {
+          var vertical = $.map(elements, function(value, index) {
+            return getSpacingProportions(containerHeight, $(value).height());
+          });
+          var horizontal = $.map(elements, function(value, index) {
+            return getSpacingProportions(containerWidth, $(value).width());
+          });
+          return {
+            verticalOffset: vertical,
+            horizontalOffset: horizontal
+          };
         }
 
         function instanceButtons(mainElement, rightHandler, leftHandler) {
@@ -41,15 +53,16 @@ $.fn.xexeuCarousel = function() {
                 'overflow':'hidden',
                 'height':String(mainHeight) + 'px',
                 'width':'inherit'
-            };
-
-            var elementsCss = {
-                'position':'absolute',
-                'top':String(verticalOffset) + 'px',
-                'left':String(horizontalOffset)+'px'
             }
             $(mainElement).css(mainCss);
-            $(elements).hide().css(elementsCss);
+            $.each(elements, function(index, value) {
+              var elementsCss = {
+                'position':'absolute',
+                'top':String(verticalOffset[index])+'px',
+                'left':String(horizontalOffset[index])+'px'
+              };
+              $(value).hide().css(elementsCss);
+            });
             $(elements[0]).show();
             $(mainElement).data('selected', String(0));
         }
@@ -72,57 +85,110 @@ $.fn.xexeuCarousel = function() {
                width:  $(mainElement).innerWidth(),
                height: tallerImageHeight
            }
-           var slidesOffsets = {
-               verticalOffset: getSpacingProportions(mainElementMeasures.height, $(elements).height()),
-               horizontalOffset: getSpacingProportions(mainElementMeasures.width, $(elements).width())
-           }
+           var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
-              var centerValue = slidesOffsets.horizontalOffset;
-              if (isTransitioning) return;
-              isTransitioning = true;
-              var containreWidth = mainElementMeasures.width;
-              //console.log(containreWidth);
-              var leavingElement = $(elements[currentElement--]);
-              leavingElement.animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false; leavingElement.hide();});//completed});
-              var numOfSlides = elements.length;
-              if (currentElement < 0) {
-                  currentElement = numOfSlides - 1;
-              }
-              $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(-containreWidth + centerValue+'px')}).animate({left: '+='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
+
+               if (isTransitioning) {
+                 return;
+               }
+               isTransitioning = true;
+
+               var centerValue = slidesOffsets.horizontalOffset[currentElement];
+               var leavingElement = $(elements[currentElement--]);
+               var leavingFinalPosition = $(leavingElement).width() + centerValue ;
+               leavingElement.animate({
+                 left: '+='+String(leavingFinalPosition+"px")},
+                 300,
+                 function() {
+                   isTransitioning = false;
+                   leavingElement.hide();
+                 });//completed});
+
+               var numOfSlides = elements.length;
+               if (currentElement < 0) {
+                   currentElement = elements.length - 1;
+               }
+
+               var entryingInitialPosition = -($(elements[currentElement]).width()) + centerValue;
+               var entryingfinalPosition = entryingInitialPosition*-1 + slidesOffsets.horizontalOffset[currentElement];
+
+               $(mainElement).data('selected', String(currentElement));
+               $(elements[currentElement])
+                .show()
+                .css({
+                  'left':String(entryingInitialPosition+'px')
+                })
+                .animate({
+                  left: '+='+String(entryingfinalPosition)
+                  },
+                  300,
+                  function(){
+                    isTransitioning = false;
+                  });//completed});
            }
 
            function rightButtonClickHandler() {
-              var centerValue = slidesOffsets.horizontalOffset;
-               if (isTransitioning) {
-                   //console.log("vai retornar");
-                   return;
-               }
-              isTransitioning = true;
-               var containreWidth = mainElementMeasures.width;
-              //console.log("deu certo");
-              var numOfSlides = elements.length;
-              var leavingElement = $(elements[currentElement++]);
-              leavingElement.animate({left: '-='+String(containreWidth)}, 300, function(){isTransitioning = false; leavingElement.hide()});//completed});
-              if (currentElement >= numOfSlides) {
-                  currentElement = 0;
-              }
-              $(mainElement).data('selected', String(currentElement));
-              $(elements[currentElement]).show().css({'left':String(containreWidth+centerValue)+'px'}).animate({left: '-='+String(containreWidth)}, 300, function(){isTransitioning = false;});//completed});
+
+             if (isTransitioning) {
+               return;
+             }
+             isTransitioning = true;
+
+             var centerValue = slidesOffsets.horizontalOffset[currentElement];
+             var leavingElement = $(elements[currentElement++]);
+             var leavingFinalPosition = -($(leavingElement).width() + centerValue);
+             leavingElement.animate({
+               left: '+='+String(leavingFinalPosition+"px")},
+               300,
+               function() {
+                 isTransitioning = false;
+                 leavingElement.hide();
+               });//completed});
+
+             var numOfSlides = elements.length;
+             if (currentElement >= numOfSlides) {
+                 currentElement = 0;
+             }
+             var entryingInitialPosition = ($(leavingElement).width() + centerValue);
+             var entryingfinalPosition = entryingInitialPosition*-1 + slidesOffsets.horizontalOffset[currentElement];
+
+             $(mainElement).data('selected', String(currentElement));
+             $(elements[currentElement])
+              .show()
+              .css({
+                'left':String(entryingInitialPosition+'px')
+              })
+              .animate({
+                left: '+='+String(entryingfinalPosition)
+                },
+                300,
+                function(){
+                  isTransitioning = false;
+                });//completed});
+
            }
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
            initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset);
 
            function onResizeHandler() {
+               console.log("resized");
+               var tallerImageHeight = $(elements[0]).height();;
+               for (var i = 0; i<elements.length; i++) {
 
-               mainElementMeasures.width = $(mainElement).innerWidth(),
-               slidesOffsets = {
-                   verticalOffset: getSpacingProportions(mainElementMeasures.height, $(elements).height()),
-                   horizontalOffset: getSpacingProportions(mainElementMeasures.width, $(elements).width())
+                   var currentImageHeight = $(elements[i]).innerHeight();
+                   if ( currentImageHeight > tallerImageHeight ) {
+                       tallerImageHeight = currentImageHeight;
+                   }
                }
+               var mainElementMeasures = {
+                   width:  $(mainElement).innerWidth(),
+                   height: tallerImageHeight
+               }
+               var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+
                var elementsCss = {
-                'left':String(slidesOffsets.horizontalOffset)+'px'
+                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px'
                }
                var mainCss = {
                  'height': String(mainElementMeasures.height) + 'px',
