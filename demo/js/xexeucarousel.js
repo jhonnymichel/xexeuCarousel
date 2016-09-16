@@ -85,23 +85,28 @@ $.fn.xexeuCarousel = function() {
         }
 
         this.each(function() {
-           //var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
-           //timeCounter.start();
+           var baseHeight = "smaller"; // "taller"
+           var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
+           timeCounter.start();
            var currentElement = 0;
            var mainElement = $(this);
            var isTransitioning = false;
            var elements = mainElement.children("img");
-           var tallerImageHeight = $(elements[0]).height();;
+           var tallerImageHeight = $(elements[0]).height();
+           var smallerImageHeight = $(elements[0]).height();
            for (var i = 0; i<elements.length; i++) {
 
                var currentImageHeight = $(elements[i]).innerHeight();
                if ( currentImageHeight > tallerImageHeight ) {
                    tallerImageHeight = currentImageHeight;
                }
+               if ( currentImageHeight < smallerImageHeight ) {
+                   smallerImageHeight = currentImageHeight;
+               }
            }
            var mainElementMeasures = {
                width:  $(mainElement).innerWidth(),
-               height: tallerImageHeight
+               height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
            }
            var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
