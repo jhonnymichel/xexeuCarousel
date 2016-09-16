@@ -62,7 +62,7 @@ $.fn.xexeuCarousel = function() {
             $(buttonRight.bind('click', rightHandler));
         }
 
-        function initialize(mainElement, elements, mainWidth, mainHeight, horizontalOffset, verticalOffset) {
+        function initialize(mainElement, elements, mainWidth, mainHeight, horizontalOffset, verticalOffset, resizeImages) {
 
             var mainCss = {
                 'position':'relative',
@@ -78,6 +78,10 @@ $.fn.xexeuCarousel = function() {
                 'top':String(verticalOffset[index])+'px',
                 'left':String(horizontalOffset[index])+'px'
               };
+              if (resizeImages) {
+                elementsCss['width'] = "100%";
+                elementsCss['height'] = "auto";
+              }
               $(value).hide().css(elementsCss);
             });
             $(elements[0]).show();
@@ -88,6 +92,7 @@ $.fn.xexeuCarousel = function() {
            var baseHeight = "smaller"; // "taller"
            var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
            timeCounter.start();
+           var resizeImages = false;
            var currentElement = 0;
            var mainElement = $(this);
            var isTransitioning = false;
@@ -192,32 +197,47 @@ $.fn.xexeuCarousel = function() {
            }
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
-           initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset);
+           initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
 
            function onResizeHandler() {
-               console.log("resized");
-               var tallerImageHeight = $(elements[0]).height();;
-               for (var i = 0; i<elements.length; i++) {
+              tallerImageHeight = $(elements[0]).height();
+              smallerImageHeight = $(elements[0]).height();
+              for (var i = 0; i<elements.length; i++) {
 
-                   var currentImageHeight = $(elements[i]).innerHeight();
-                   if ( currentImageHeight > tallerImageHeight ) {
-                       tallerImageHeight = currentImageHeight;
-                   }
-               }
-               var mainElementMeasures = {
-                   width:  $(mainElement).innerWidth(),
-                   height: tallerImageHeight
-               }
-               var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+                 var currentImageHeight = $(elements[i]).innerHeight();
+                 if ( currentImageHeight > tallerImageHeight ) {
+                     tallerImageHeight = currentImageHeight;
+                 }
+                 if ( currentImageHeight < smallerImageHeight ) {
+                     smallerImageHeight = currentImageHeight;
+                 }
+              }
+            mainElementMeasures = {
+                 width:  $(mainElement).innerWidth(),
+                 height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
+             }
+             slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
 
+             var mainCss = {
+                 'position':'relative',
+                 'text-align':'center',
+                 'overflow':'hidden',
+                 'height':String(mainElementMeasures.height) + 'px',
+                 'width':'inherit'
+             }
+             $(mainElement).css(mainCss);
+             $.each(elements, function(index, value) {
                var elementsCss = {
-                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px'
-               }
-               var mainCss = {
-                 'height': String(mainElementMeasures.height) + 'px',
-               }
-               $(mainElement).css(mainCss)
-               $(elements[currentElement]).css(elementsCss);
+                 'position':'absolute',
+                 'top':String(slidesOffsets.verticalOffset[index])+'px',
+                };
+                $(value).css(elementsCss);
+              });
+              var elementsCss = {
+                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
+              };
+             console.log($(elements[currentElement]));
+             $(elements[currentElement]).css(elementsCss);
            }
            $(window).bind('resize', onResizeHandler);
         });
