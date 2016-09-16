@@ -1,5 +1,22 @@
 (function ($) {
 
+  function TimeCounter(callback, interval) {
+    interval = typeof interval === "undefined" ? 3000 : interval;
+    currentInterval = interval;
+    var self = this;
+    this.start = function() {
+      self.deltaTime = Date.now();
+      setTimeout(afterTimeout, currentInterval);
+    }
+    function afterTimeout() {
+      if (callback) {
+        callback();
+      }
+      self.deltaTime = Date.now() - self.deltaTime;
+      currentInterval += interval - self.deltaTime;
+      self.start();
+    }
+  }
 $.fn.xexeuCarousel = function() {
 
         var buttonsStyle = {
@@ -68,7 +85,8 @@ $.fn.xexeuCarousel = function() {
         }
 
         this.each(function() {
-
+           //var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
+           //timeCounter.start();
            var currentElement = 0;
            var mainElement = $(this);
            var isTransitioning = false;
