@@ -69,7 +69,8 @@ $.fn.xexeuCarousel = function() {
                 'text-align':'center',
                 'overflow':'hidden',
                 'height':String(mainHeight) + 'px',
-                'width':'inherit'
+                'width':'inherit',
+                'max-width':String(mainWidth) + 'px'
             }
             $(mainElement).css(mainCss);
             $.each(elements, function(index, value) {
@@ -90,6 +91,7 @@ $.fn.xexeuCarousel = function() {
 
         this.each(function() {
            var baseHeight = "smaller"; // "taller"
+           var baseWidth = "smaller"; // "wider"
            var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
            timeCounter.start();
            var resizeImages = false;
@@ -99,6 +101,8 @@ $.fn.xexeuCarousel = function() {
            var elements = mainElement.children("img");
            var tallerImageHeight = $(elements[0]).height();
            var smallerImageHeight = $(elements[0]).height();
+           var widerImageWidth = $(elements[0]).width();
+           var smallerImageWidth = $(elements[0]).width();
            for (var i = 0; i<elements.length; i++) {
 
                var currentImageHeight = $(elements[i]).innerHeight();
@@ -108,12 +112,21 @@ $.fn.xexeuCarousel = function() {
                if ( currentImageHeight < smallerImageHeight ) {
                    smallerImageHeight = currentImageHeight;
                }
+
+                var currentImageWidth = $(elements[i]).innerWidth();
+                if ( currentImageWidth > widerImageWidth ) {
+                    widerImageWidth = currentImageWidth;
+                }
+                if ( currentImageWidth < smallerImageWidth ) {
+                    smallerImageWidth = currentImageWidth;
+                }
            }
            var mainElementMeasures = {
+               maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
                width:  $(mainElement).innerWidth(),
                height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
            }
-           var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+           var slidesOffsets = getOffsets(mainElementMeasures.maxWidth, mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
 
                if (isTransitioning) {
@@ -197,7 +210,7 @@ $.fn.xexeuCarousel = function() {
            }
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
-           initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
+           initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
 
            function onResizeHandler() {
               tallerImageHeight = $(elements[0]).height();
@@ -211,8 +224,17 @@ $.fn.xexeuCarousel = function() {
                  if ( currentImageHeight < smallerImageHeight ) {
                      smallerImageHeight = currentImageHeight;
                  }
+
+                  var currentImageWidth = $(elements[i]).innerWidth();
+                  if ( currentImageWidth > widerImageWidth ) {
+                      widerImageWidth = currentImageWidth;
+                  }
+                  if ( currentImageWidth < smallerImageWidth ) {
+                      smallerImageWidth = currentImageWidth;
+                  }
               }
             mainElementMeasures = {
+                 maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
                  width:  $(mainElement).innerWidth(),
                  height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
              }
@@ -223,7 +245,8 @@ $.fn.xexeuCarousel = function() {
                  'text-align':'center',
                  'overflow':'hidden',
                  'height':String(mainElementMeasures.height) + 'px',
-                 'width':'inherit'
+                 'width':'inherit',
+                 'max-width':String(mainElementMeasures.maxWidth) + 'px'
              }
              $(mainElement).css(mainCss);
              $.each(elements, function(index, value) {
