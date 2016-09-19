@@ -1,12 +1,29 @@
 (function ($) {
 
+  function TimeCounter(callback, interval) {
+    interval = typeof interval === "undefined" ? 3000 : interval;
+    currentInterval = interval;
+    var self = this;
+    this.start = function() {
+      self.deltaTime = Date.now();
+      setTimeout(afterTimeout, currentInterval);
+    }
+    function afterTimeout() {
+      if (callback) {
+        callback();
+      }
+      self.deltaTime = Date.now() - self.deltaTime;
+      currentInterval += interval - self.deltaTime;
+      self.start();
+    }
+  }
 $.fn.xexeuCarousel = function() {
 
-      var buttonsStyle = {
-          color: "color: white; padding: 20px; background: none; font-size: 40px; cursor: pointer;",
-          positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
-          positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
-      };
+        var buttonsStyle = {
+            color: "color: white",
+            positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
+            positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
+        };
 
         var transitionStyle = {
             type: 'swipe',
@@ -14,7 +31,6 @@ $.fn.xexeuCarousel = function() {
         }
 
         function getSpacingProportions(container, element) {
-            console.log(element);
             if (container == element) return 0;
             var proportion = (container - element) * 0.5;
             return proportion;
@@ -35,8 +51,8 @@ $.fn.xexeuCarousel = function() {
 
         function instanceButtons(mainElement, rightHandler, leftHandler) {
 
-            var buttonLeft = $("<div class='xexeu-carousel-btn' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></div>");
-            var buttonRight =  $("<div class='xexeu-carousel-btn' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></div>");
+            var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
+            var buttonRight =  $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></button>");
 
             $(mainElement).append(buttonLeft);
             $(mainElement).append(buttonRight);
@@ -45,14 +61,15 @@ $.fn.xexeuCarousel = function() {
             $(buttonRight.bind('click', rightHandler));
         }
 
-        function initialize(mainElement, elements, mainWidth, mainHeight, horizontalOffset, verticalOffset) {
+        function initialize(mainElement, elements, mainWidth, mainHeight, horizontalOffset, verticalOffset, resizeImages) {
 
             var mainCss = {
                 'position':'relative',
                 'text-align':'center',
                 'overflow':'hidden',
                 'height':String(mainHeight) + 'px',
-                'width':'inherit'
+                'width':'inherit',
+                'max-width':String(mainWidth) + 'px'
             }
             $(mainElement).css(mainCss);
             $.each(elements, function(index, value) {
@@ -61,6 +78,10 @@ $.fn.xexeuCarousel = function() {
                 'top':String(verticalOffset[index])+'px',
                 'left':String(horizontalOffset[index])+'px'
               };
+              if (resizeImages) {
+                elementsCss['width'] = "100%";
+                elementsCss['height'] = "auto";
+              }
               $(value).hide().css(elementsCss);
             });
             $(elements[0]).show();
@@ -68,24 +89,48 @@ $.fn.xexeuCarousel = function() {
         }
 
         this.each(function() {
-
+           var baseHeight = "smaller"; // "taller"
+           var baseWidth = "smaller"; // "wider"
+           var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
+           timeCounter.start();
+           var resizeImages = false;
            var currentElement = 0;
            var mainElement = $(this);
            var isTransitioning = false;
            var elements = mainElement.children("img");
-           var tallerImageHeight = $(elements[0]).height();;
+           var tallerImageHeight = $(elements[0]).height();
+           var smallerImageHeight = $(elements[0]).height();
+           var widerImageWidth = $(elements[0]).width();
+           var smallerImageWidth = $(elements[0]).width();
            for (var i = 0; i<elements.length; i++) {
 
                var currentImageHeight = $(elements[i]).innerHeight();
                if ( currentImageHeight > tallerImageHeight ) {
                    tallerImageHeight = currentImageHeight;
                }
+               if ( currentImageHeight < smallerImageHeight ) {
+                   smallerImageHeight = currentImageHeight;
+               }
+
+                var currentImageWidth = $(elements[i]).innerWidth();
+                if ( currentImageWidth > widerImageWidth ) {
+                    widerImageWidth = currentImageWidth;
+                }
+                if ( currentImageWidth < smallerImageWidth ) {
+                    smallerImageWidth = currentImageWidth;
+                }
            }
            var mainElementMeasures = {
+               maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
                width:  $(mainElement).innerWidth(),
-               height: tallerImageHeight
+               height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
            }
-           var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+           console.log(mainElementMeasures.maxWidth);
+           var widthForOffset = mainElementMeasures.width > mainElementMeasures.maxWidth ?
+                                mainElementMeasures.maxWidth :
+                                mainElementMeasures.width;
+           console.log("on start mainelement width: ", mainElementMeasures.width);
+           var slidesOffsets = getOffsets((widthForOffset), mainElementMeasures.height, elements);
            function leftButtonClickHandler() {
 
                if (isTransitioning) {
@@ -169,32 +214,57 @@ $.fn.xexeuCarousel = function() {
            }
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
-           initialize(mainElement, elements, mainElementMeasures.width, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset);
+           initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
 
            function onResizeHandler() {
-               console.log("resized");
-               var tallerImageHeight = $(elements[0]).height();;
-               for (var i = 0; i<elements.length; i++) {
+              tallerImageHeight = $(elements[0]).height();
+              smallerImageHeight = $(elements[0]).height();
+              for (var i = 0; i<elements.length; i++) {
 
-                   var currentImageHeight = $(elements[i]).innerHeight();
-                   if ( currentImageHeight > tallerImageHeight ) {
-                       tallerImageHeight = currentImageHeight;
-                   }
-               }
-               var mainElementMeasures = {
-                   width:  $(mainElement).innerWidth(),
-                   height: tallerImageHeight
-               }
-               var slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+                 var currentImageHeight = $(elements[i]).innerHeight();
+                 if ( currentImageHeight > tallerImageHeight ) {
+                     tallerImageHeight = currentImageHeight;
+                 }
+                 if ( currentImageHeight < smallerImageHeight ) {
+                     smallerImageHeight = currentImageHeight;
+                 }
 
+                  var currentImageWidth = $(elements[i]).innerWidth();
+                  if ( currentImageWidth > widerImageWidth ) {
+                      widerImageWidth = currentImageWidth;
+                  }
+                  if ( currentImageWidth < smallerImageWidth ) {
+                      smallerImageWidth = currentImageWidth;
+                  }
+              }
+            mainElementMeasures = {
+                 maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
+                 width:  $(mainElement).innerWidth(),
+                 height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
+             }
+
+             slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
+
+             var mainCss = {
+                 'position':'relative',
+                 'text-align':'center',
+                 'overflow':'hidden',
+                 'height':String(mainElementMeasures.height) + 'px',
+                 'width':'inherit',
+                 'max-width':String(mainElementMeasures.maxWidth) + 'px'
+             }
+             $(mainElement).css(mainCss);
+             $.each(elements, function(index, value) {
                var elementsCss = {
-                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px'
-               }
-               var mainCss = {
-                 'height': String(mainElementMeasures.height) + 'px',
-               }
-               $(mainElement).css(mainCss)
-               $(elements[currentElement]).css(elementsCss);
+                 'position':'absolute',
+                 'top':String(slidesOffsets.verticalOffset[index])+'px',
+                };
+                $(value).css(elementsCss);
+              });
+              var elementsCss = {
+                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
+              };
+             $(elements[currentElement]).css(elementsCss);
            }
            $(window).bind('resize', onResizeHandler);
         });
