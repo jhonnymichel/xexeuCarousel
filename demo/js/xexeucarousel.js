@@ -49,6 +49,29 @@ $.fn.xexeuCarousel = function() {
           };
         }
 
+        function setImagesCss(props) {
+          console.log(props);
+          var elements = props.elements;
+          var style = {
+            'position':'absolute',
+          };
+
+          if (props.resizeImages === true) {
+            style['width'] = "100%";
+            style['height'] = "auto";
+          }
+
+          $.each(elements, function(index, value) {
+            if (props.horizontalOffset) {
+              style['left'] = String(props.horizontalOffset[index])+'px';
+            }
+            if (props.verticalOffset) {
+              style['top'] = String(props.verticalOffset[index])+'px';
+            }
+            $(value).css(style);
+          });
+
+        }
         function instanceButtons(mainElement, rightHandler, leftHandler) {
 
             var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
@@ -72,18 +95,13 @@ $.fn.xexeuCarousel = function() {
                 'max-width':String(mainWidth) + 'px'
             }
             $(mainElement).css(mainCss);
-            $.each(elements, function(index, value) {
-              var elementsCss = {
-                'position':'absolute',
-                'top':String(verticalOffset[index])+'px',
-                'left':String(horizontalOffset[index])+'px'
-              };
-              if (resizeImages) {
-                elementsCss['width'] = "100%";
-                elementsCss['height'] = "auto";
-              }
-              $(value).hide().css(elementsCss);
-            });
+            setImagesCss({
+              resizeImages: resizeImages,
+              horizontalOffset: horizontalOffset,
+              verticalOffset: verticalOffset,
+              elements: elements
+            })
+            $(elements).hide();
             $(elements[0]).show();
             $(mainElement).data('selected', String(0));
         }
@@ -125,12 +143,11 @@ $.fn.xexeuCarousel = function() {
                width:  $(mainElement).innerWidth(),
                height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
            }
-           console.log(mainElementMeasures.maxWidth);
            var widthForOffset = mainElementMeasures.width > mainElementMeasures.maxWidth ?
                                 mainElementMeasures.maxWidth :
                                 mainElementMeasures.width;
-           console.log("on start mainelement width: ", mainElementMeasures.width);
            var slidesOffsets = getOffsets((widthForOffset), mainElementMeasures.height, elements);
+           //console.log(typeof $(elements), typeoff $(elements[0]), typeof elements, typeof elements[0]);
            function leftButtonClickHandler() {
 
                if (isTransitioning) {
@@ -254,17 +271,17 @@ $.fn.xexeuCarousel = function() {
                  'max-width':String(mainElementMeasures.maxWidth) + 'px'
              }
              $(mainElement).css(mainCss);
-             $.each(elements, function(index, value) {
-               var elementsCss = {
-                 'position':'absolute',
-                 'top':String(slidesOffsets.verticalOffset[index])+'px',
-                };
-                $(value).css(elementsCss);
-              });
-              var elementsCss = {
-                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
-              };
-             $(elements[currentElement]).css(elementsCss);
+
+             setImagesCss({
+               resizeImages: resizeImages,
+               verticalOffset: slidesOffsets.verticalOffset,
+               elements: elements
+             });
+
+            var elementsCss = {
+              'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
+            };
+            $(elements[currentElement]).css(elementsCss);
            }
            $(window).bind('resize', onResizeHandler);
         });
