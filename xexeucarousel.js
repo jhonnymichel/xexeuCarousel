@@ -49,6 +49,65 @@ $.fn.xexeuCarousel = function() {
           };
         }
 
+        function setImagesCss(props) {
+          console.log(props);
+          var elements = props.elements;
+          var style = {
+            'position':'absolute',
+          };
+
+          if (props.resizeImages === true) {
+            style['width'] = "100%";
+            style['height'] = "auto";
+          }
+
+          $.each(elements, function(index, value) {
+            if (props.horizontalOffset) {
+              style['left'] = String(props.horizontalOffset[index])+'px';
+            }
+            if (props.verticalOffset) {
+              style['top'] = String(props.verticalOffset[index])+'px';
+            }
+            $(value).css(style);
+          });
+
+        }
+        function getImagesBounds(elements) {
+
+          var tallerImageHeight = $(elements[0]).height();
+          var smallerImageHeight = $(elements[0]).height();
+          var widerImageWidth = $(elements[0]).width();
+          var smallerImageWidth = $(elements[0]).width();
+
+          for (var i = 0; i<elements.length; i++) {
+
+            var currentImageHeight = $(elements[i]).innerHeight();
+            if ( currentImageHeight > tallerImageHeight ) {
+              tallerImageHeight = currentImageHeight;
+            }
+            if ( currentImageHeight < smallerImageHeight ) {
+              smallerImageHeight = currentImageHeight;
+            }
+
+            var currentImageWidth = $(elements[i]).innerWidth();
+            if ( currentImageWidth > widerImageWidth ) {
+              widerImageWidth = currentImageWidth;
+            }
+            if ( currentImageWidth < smallerImageWidth ) {
+              smallerImageWidth = currentImageWidth;
+            }
+          }
+          return {
+            width: {
+              wider: widerImageWidth,
+              smaller: smallerImageWidth
+            },
+            height: {
+              taller: tallerImageHeight,
+              smaller: smallerImageHeight
+            }
+          }
+        }
         function instanceButtons(mainElement, rightHandler, leftHandler) {
 
             var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
@@ -67,23 +126,20 @@ $.fn.xexeuCarousel = function() {
                 'position':'relative',
                 'text-align':'center',
                 'overflow':'hidden',
-                'height':String(mainHeight) + 'px',
                 'width':'inherit',
-                'max-width':String(mainWidth) + 'px'
+            }
+            if (!resizeImages) {
+              mainCss['max-width'] = String(mainWidth) + 'px';
+              mainCss['height'] = String(mainHeight) + 'px';
             }
             $(mainElement).css(mainCss);
-            $.each(elements, function(index, value) {
-              var elementsCss = {
-                'position':'absolute',
-                'top':String(verticalOffset[index])+'px',
-                'left':String(horizontalOffset[index])+'px'
-              };
-              if (resizeImages) {
-                elementsCss['width'] = "100%";
-                elementsCss['height'] = "auto";
-              }
-              $(value).hide().css(elementsCss);
-            });
+            setImagesCss({
+              resizeImages: resizeImages,
+              horizontalOffset: horizontalOffset,
+              verticalOffset: verticalOffset,
+              elements: elements
+            })
+            $(elements).hide();
             $(elements[0]).show();
             $(mainElement).data('selected', String(0));
         }
@@ -93,44 +149,32 @@ $.fn.xexeuCarousel = function() {
            var baseWidth = "smaller"; // "wider"
            var timeCounter = new TimeCounter(rightButtonClickHandler, 3400);
            timeCounter.start();
-           var resizeImages = false;
+           var resizeImages = true;
            var currentElement = 0;
            var mainElement = $(this);
            var isTransitioning = false;
            var elements = mainElement.children("img");
-           var tallerImageHeight = $(elements[0]).height();
-           var smallerImageHeight = $(elements[0]).height();
-           var widerImageWidth = $(elements[0]).width();
-           var smallerImageWidth = $(elements[0]).width();
-           for (var i = 0; i<elements.length; i++) {
 
-               var currentImageHeight = $(elements[i]).innerHeight();
-               if ( currentImageHeight > tallerImageHeight ) {
-                   tallerImageHeight = currentImageHeight;
-               }
-               if ( currentImageHeight < smallerImageHeight ) {
-                   smallerImageHeight = currentImageHeight;
-               }
+           var imagesBoundaries = getImagesBounds(elements);
 
-                var currentImageWidth = $(elements[i]).innerWidth();
-                if ( currentImageWidth > widerImageWidth ) {
-                    widerImageWidth = currentImageWidth;
-                }
-                if ( currentImageWidth < smallerImageWidth ) {
-                    smallerImageWidth = currentImageWidth;
-                }
-           }
            var mainElementMeasures = {
-               maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
                width:  $(mainElement).innerWidth(),
-               height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
+               height: baseHeight == "smaller" ? imagesBoundaries.height.smaller : imagesBoundaries.height.taller
            }
-           console.log(mainElementMeasures.maxWidth);
+           if(resizeImages) {
+              mainElementMeasures['maxWidth'] = imagesBoundaries.width.wider;
+              mainElementMeasures['height'] = 'inherit';
+           } else {
+              mainElementMeasures['maxWidth'] = baseWidth == "smaller" ?
+              imagesBoundaries.width.smaller :
+              imagesBoundaries.width.wider;
+           }
+
            var widthForOffset = mainElementMeasures.width > mainElementMeasures.maxWidth ?
                                 mainElementMeasures.maxWidth :
                                 mainElementMeasures.width;
-           console.log("on start mainelement width: ", mainElementMeasures.width);
            var slidesOffsets = getOffsets((widthForOffset), mainElementMeasures.height, elements);
+           //console.log(typeof $(elements), typeoff $(elements[0]), typeof elements, typeof elements[0]);
            function leftButtonClickHandler() {
 
                if (isTransitioning) {
@@ -215,33 +259,22 @@ $.fn.xexeuCarousel = function() {
 
            instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler);
            initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
-
+           if (resizeImages) {
+             onResizeHandler();
+           }
            function onResizeHandler() {
-              tallerImageHeight = $(elements[0]).height();
-              smallerImageHeight = $(elements[0]).height();
-              for (var i = 0; i<elements.length; i++) {
 
-                 var currentImageHeight = $(elements[i]).innerHeight();
-                 if ( currentImageHeight > tallerImageHeight ) {
-                     tallerImageHeight = currentImageHeight;
-                 }
-                 if ( currentImageHeight < smallerImageHeight ) {
-                     smallerImageHeight = currentImageHeight;
-                 }
+            imagesBoundaries = getImagesBounds(elements);
+            var mainElementMeasures = {
+                width:  $(mainElement).innerWidth(),
+                height: baseHeight == "smaller" ? imagesBoundaries.height.smaller : imagesBoundaries.height.taller
+            }
 
-                  var currentImageWidth = $(elements[i]).innerWidth();
-                  if ( currentImageWidth > widerImageWidth ) {
-                      widerImageWidth = currentImageWidth;
-                  }
-                  if ( currentImageWidth < smallerImageWidth ) {
-                      smallerImageWidth = currentImageWidth;
-                  }
-              }
-            mainElementMeasures = {
-                 maxWidth: baseWidth == "smaller" ? smallerImageWidth : widerImageWidth,
-                 width:  $(mainElement).innerWidth(),
-                 height: baseHeight == "smaller" ? smallerImageHeight : tallerImageHeight
-             }
+            if(!resizeImages) {
+               mainElementMeasures['maxWidth'] == "smaller" ?
+               imagesBoundaries.width.smaller :
+               imagesBoundaries.width.wider;
+            }
 
              slidesOffsets = getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
 
@@ -251,20 +284,22 @@ $.fn.xexeuCarousel = function() {
                  'overflow':'hidden',
                  'height':String(mainElementMeasures.height) + 'px',
                  'width':'inherit',
-                 'max-width':String(mainElementMeasures.maxWidth) + 'px'
+             }
+             if (!resizeImages) {
+               mainCss['max-width'] = String(mainElementMeasures.maxWidth) + 'px';
              }
              $(mainElement).css(mainCss);
-             $.each(elements, function(index, value) {
-               var elementsCss = {
-                 'position':'absolute',
-                 'top':String(slidesOffsets.verticalOffset[index])+'px',
-                };
-                $(value).css(elementsCss);
-              });
-              var elementsCss = {
-                'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
-              };
-             $(elements[currentElement]).css(elementsCss);
+
+             setImagesCss({
+               resizeImages: resizeImages,
+               verticalOffset: slidesOffsets.verticalOffset,
+               elements: elements
+             });
+
+            var elementsCss = {
+              'left':String(slidesOffsets.horizontalOffset[currentElement])+'px',
+            };
+            $(elements[currentElement]).css(elementsCss);
            }
            $(window).bind('resize', onResizeHandler);
         });
