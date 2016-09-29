@@ -36,10 +36,10 @@
     getOffsets: function(containerWidth, containerHeight, elements) {
       var self = this;
       var vertical = $.map(elements, function(value, index) {
-        return self.getSpacingProportions(containerHeight, $(value).height());
+        return self.getSpacingProportions.bind(self)(containerHeight, $(value).height());
       });
       var horizontal = $.map(elements, function(value, index) {
-        return self.getSpacingProportions(containerWidth, $(value).width());
+        return self.getSpacingProportions.bind(self)(containerWidth, $(value).width());
       });
       return {
         verticalOffset: vertical,
@@ -62,8 +62,6 @@
         if (props.horizontalOffset) {
           style['left'] = String(props.horizontalOffset[index])+'px';
         }
-        console.log(horizontalOffset);
-        console.log(verticalOffset);
         if (props.verticalOffset) {
           style['top'] = String(props.verticalOffset[index])+'px';
         }
@@ -97,7 +95,6 @@
           smallerImageWidth = currentImageWidth;
         }
       }
-
       return {
         width: {
 
@@ -141,8 +138,8 @@
           'width':'inherit',
       }
       if (!self.resizeImages) {
-        mainCss['max-width'] = String(mainWidth) + 'px';
-        mainCss['height'] = String(mainHeight) + 'px';
+        mainCss['max-width'] = String(self.mainElementMeasures.maxWidth) + 'px';
+        mainCss['height'] = String(self.mainElementMeasures.height) + 'px';
       }
       $(self.mainElement).css(mainCss);
 
@@ -167,7 +164,7 @@
       $(window).bind('resize', self.onResizeHandler.bind(self));
 
       if (self.resizeImages) {
-        self.onResizeHandler();
+        self.onResizeHandler.bind(self)();
       }
 
     },
@@ -273,8 +270,8 @@
         self.imagesBoundaries.width.wider;
      }
 
-      self.slidesOffsets = methods.getOffsets(self.mainElementMeasures.width,
-                                              self.mainElementMeasures.height,
+      self.slidesOffsets = methods.getOffsets(mainElementMeasures.width,
+                                              mainElementMeasures.height,
                                               self.elements);
       var mainCss = {
           'position':'relative',
@@ -331,6 +328,8 @@
                          self.mainElementMeasures.maxWidth :
                          self.mainElementMeasures.width;
     self.slidesOffsets = methods.getOffsets((self.widthForOffset), self.mainElementMeasures.height, self.elements);
+    console.log (self.slidesOffsets);
+    console.log(self.mainElementMeasures);
   }
 };
 
@@ -346,7 +345,7 @@
 
   $.fn.xexeuCarousel.options = {
     buttonsStyle: {
-      color: "color: white",
+      color: "color: white; height: 100px; ",
       positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
       positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
     },
