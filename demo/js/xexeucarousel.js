@@ -62,6 +62,8 @@
         if (props.horizontalOffset) {
           style['left'] = String(props.horizontalOffset[index])+'px';
         }
+        console.log(horizontalOffset);
+        console.log(verticalOffset);
         if (props.verticalOffset) {
           style['top'] = String(props.verticalOffset[index])+'px';
         }
@@ -162,7 +164,7 @@
       $(self.elements[0]).show();
       $(self.mainElement).data('selected', String(0));
 
-      $(window).bind('resize', self.onResizeHandler);
+      $(window).bind('resize', self.onResizeHandler.bind(self));
 
       if (self.resizeImages) {
         self.onResizeHandler();
@@ -216,8 +218,6 @@
     rightButtonClickHandler: function() {
 
       var self = this;
-
-      console.log(self);
       if (self.isTransitioning) {
         return;
       }
@@ -312,7 +312,6 @@
     self.mainElement = $(element);
     self.isTransitioning = false;
     self.elements = self.mainElement.children("img");
-
     self.imagesBoundaries = methods.getImagesBounds(self.elements);
 
     self.mainElementMeasures = {
