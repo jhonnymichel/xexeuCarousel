@@ -326,4 +326,30 @@
     });
   }
 
+  /*$.fn.xexeuCarousel = function(options) {
+    var opts = $.extend( {}, $.fn.xexeuCarousel.options, options );
+    return this.each(function() {
+
+       var carousel = Object.create(XexeuCarousel);
+       carousel.initialize(opts, this);
+
+    });
+  }
+
+  $.fn.xexeuCarousel.options = {
+    buttonsStyle: {
+      color: "color: white; height: 100px; ",
+      positionLeft: "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
+      positionRight: "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
+    },
+    transitionStyle: {
+        type: 'swipe',
+        swipe: 'left:'//fade or swipe
+    },
+    baseHeight: "smaller", //"taller"
+    baseWidth: "smaller", //"wider"
+    autoChange: true, //false
+    resizeImages: true, //false
+  }*/
+
 }(jQuery));
