@@ -32,6 +32,7 @@
     getOffsets: function(containerWidth, containerHeight, elements) {
       var self = this;
       var vertical = $.map(elements, function(value, index) {
+        console.log(self.getSpacingProportions.bind(self)(containerHeight, $(value).height()))
         return self.getSpacingProportions.bind(self)(containerHeight, $(value).height());
       });
       var horizontal = $.map(elements, function(value, index) {
@@ -158,7 +159,7 @@
 
       $(elements).hide();
       $(elements[0]).show();
-      $(mainElement).data('selected', String(0));
+      $(mainElement).data('selected', String(0));;
     }
 
     this.each(function() {
@@ -276,9 +277,10 @@
       }
 
       methods.instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler, buttonsStyle);
-      initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
+      //initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
+      console.log("initialization done. slide offsets: ", slidesOffsets)
       if (resizeImages) {
-        onResizeHandler();
+      //  onResizeHandler();
       }
 
       function onResizeHandler() {

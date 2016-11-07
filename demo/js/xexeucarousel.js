@@ -32,10 +32,10 @@
     getOffsets: function(containerWidth, containerHeight, elements) {
       var self = this;
       var vertical = $.map(elements, function(value, index) {
-        return self.getSpacingProportions.bind(self)(containerHeight, $(value).height());
+        return self.getSpacingProportions(containerHeight, $(value).height());
       });
       var horizontal = $.map(elements, function(value, index) {
-        return self.getSpacingProportions.bind(self)(containerWidth, $(value).width());
+        return self.getSpacingProportions(containerWidth, $(value).width());
       });
       return {
         verticalOffset: vertical,
@@ -119,21 +119,60 @@
         $(buttonRight).bind('click', rightHandler);
     }
   }
+  var XexeuCarousel = {
 
-  $.fn.xexeuCarousel = function() {
+    bootstrap: function(options, mainElement) {
+      var self = this;
 
-    var buttonsStyle = {
-      color         : "color: white",
-      positionLeft  : "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
-      positionRight : "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
-    };
+      self.baseHeight = options.baseHeight;
+      self.baseWidth = options.baseWidth;
+      self.timeCounter = options.autoChange ?
+        new TimeCounter(self.rightButtonClickHandler) :
+        false;
+      self.resizeImages = options.resizeImages;
+      self.buttonsStyle = options.buttonsStyle;
+      self.transitionStyle = options.transitionStyle;
 
-    var transitionStyle = {
-      type  : 'swipe',
-      swipe : 'left:'//fade or swipe
-    }
+      self.mainElement = $(mainElement);
+      self.isTransitioning = false;
+      self.elements = self.mainElement.children("img");
 
-    function initialize(mainElement, elements, mainWidth, mainHeight, horizontalOffset, verticalOffset, resizeImages) {
+      self.imagesBoundaries = methods.getImagesBounds(self.elements);
+      self.mainElementMeasures = {
+          width  : self.mainElement.innerWidth(),
+          height : self.baseHeight == "smaller" ?
+            self.imagesBoundaries.height.smaller :
+            self.imagesBoundaries.height.taller
+      };
+
+      if(self.resizeImages) {
+        self.mainElementMeasures['maxWidth'] = self.imagesBoundaries.width.wider;
+        self.mainElementMeasures['height']   = 'inherit';
+      } else {
+        self.mainElementMeasures['maxWidth'] = self.baseWidth == "smaller" ?
+        self.imagesBoundaries.width.smaller :
+        self.imagesBoundaries.width.wider;
+      }
+
+      self.widthForOffset = self.mainElementMeasures.width > self.mainElementMeasures.maxWidth ?
+                           self.mainElementMeasures.maxWidth :
+                           self.mainElementMeasures.width;
+      self.slidesOffsets = methods.getOffsets((self.widthForOffset), self.mainElementMeasures.height, self.elements);
+
+      methods.instanceButtons(self.mainElement, self.rightButtonClickHandler.bind(self), self.leftButtonClickHandler.bind(self), self.buttonsStyle);
+      //$(window).bind('resize', self.onResizeHandler.bind(self));
+      self.initialize();
+
+      if (self.resizeImages) {
+        //self.onResizeHandler();
+      }
+      console.log("bootstrap done");
+    },
+
+    initialize: function() {
+
+      var self = this;
+      console.log(self);
 
       var mainCss = {
           position     : 'relative',
@@ -142,196 +181,160 @@
           width        : 'inherit'
       }
 
-      if (!resizeImages) {
-        mainCss['max-width'] = String(mainWidth) + 'px';
-        mainCss['height']    = String(mainHeight) + 'px';
+      if (!self.resizeImages) {
+        mainCss['max-width'] = String(self.mainElementMeasures.maxWidth) + 'px';
+        mainCss['height']    = String(self.mainElementMeasures.height) + 'px';
       }
 
-      $(mainElement).css(mainCss);
+      self.mainElement.css(mainCss);
 
+      //slides breaks here.
       methods.setImagesCss({
-        resizeImages: resizeImages,
-        horizontalOffset: horizontalOffset,
-        verticalOffset: verticalOffset,
-        elements: elements
+        resizeImages: self.resizeImages,
+        horizontalOffset: self.slidesOffsets.horizontalOffset,
+        verticalOffset:self.slidesOffsets.verticalOffset,
+        elements: self.elements
       });
 
-      $(elements).hide();
-      $(elements[0]).show();
-      $(mainElement).data('selected', String(0));
-    }
+      self.elements.hide();
+      self.currentElement = 0;
+      $(self.elements[0]).show();
+      self.mainElement.data('selected', String(0));
 
-    this.each(function() {
-      var baseHeight       = "smaller"; // "taller"
-      var baseWidth        = "smaller"; // "wider"
-      var timeCounter      = new TimeCounter(rightButtonClickHandler, 3400);
-      var resizeImages     = true;
-      var currentElement   = 0;
-      var mainElement      = $(this);
-      var isTransitioning  = false;
-      var elements         = mainElement.children("img");
-      var imagesBoundaries = methods.getImagesBounds(elements);
+      console.log("initialization done. slide offsets: ", self.slidesOffsets);
+    },
 
-      timeCounter.start();
+    leftButtonClickHandler: function() {
+      var self = this;
 
+      if (self.isTransitioning) {
+        return;
+      }
+      self.isTransitioning = true;
+
+      var centerValue = self.slidesOffsets.horizontalOffset[self.currentElement];
+      var leavingElement = $(self.elements[self.currentElement--]);
+      var leavingFinalPosition = $(leavingElement).width() + centerValue ;
+      leavingElement.animate({
+        left: '+='+String(leavingFinalPosition+"px")},
+        300,
+        function() {
+          self.isTransitioning = false;
+          leavingElement.hide();
+        });//completed});
+
+      var numOfSlides = self.elements.length;
+      if (self.currentElement < 0) {
+          self.currentElement = self.elements.length - 1;
+      }
+
+      var entryingInitialPosition = -($(self.elements[self.currentElement]).width()) + centerValue;
+      var entryingfinalPosition = entryingInitialPosition*-1 + self.slidesOffsets.horizontalOffset[self.currentElement];
+
+      $(self.mainElement).data('selected', String(self.currentElement));
+      $(self.elements[self.currentElement])
+        .show()
+        .css({
+          'left':String(entryingInitialPosition+'px')
+        })
+        .animate({
+          left: '+='+String(entryingfinalPosition)
+        },
+        300,
+        function(){
+          self.isTransitioning = false;
+        });//completed});
+    },
+
+    rightButtonClickHandler: function() {
+      var self = this;
+
+      if (self.isTransitioning) {
+        return;
+      }
+      self.isTransitioning = true;
+
+      var centerValue = self.slidesOffsets.horizontalOffset[self.currentElement];
+      var leavingElement = $(self.elements[self.currentElement++]);
+      var leavingFinalPosition = -($(leavingElement).width() + centerValue);
+      leavingElement.animate({
+        left: '+='+String(leavingFinalPosition+"px")},
+        300,
+        function() {
+          self.isTransitioning = false;
+          leavingElement.hide();
+        });//completed});
+
+      var numOfSlides = self.elements.length;
+      if (self.currentElement >= numOfSlides) {
+          self.currentElement = 0;
+      }
+      var entryingInitialPosition = ($(leavingElement).width() + centerValue);
+      var entryingfinalPosition = entryingInitialPosition*-1 + self.slidesOffsets.horizontalOffset[self.currentElement];
+
+      $(self.mainElement).data('selected', String(self.currentElement));
+      $(self.elements[self.currentElement])
+        .show()
+        .css({
+          'left':String(entryingInitialPosition+'px')
+        })
+        .animate({
+          left: '+='+String(entryingfinalPosition)
+        },
+        300,
+        function(){
+          self.isTransitioning = false;
+        });//completed});
+    },
+
+    onResizeHandler: function() {
+      var self = this;
+
+      self.imagesBoundaries = methods.getImagesBounds(self.elements);
       var mainElementMeasures = {
-          width  : $(mainElement).innerWidth(),
-          height : baseHeight == "smaller" ? imagesBoundaries.height.smaller : imagesBoundaries.height.taller
+        width:  $(self.mainElement).innerWidth(),
+        height: self.baseHeight == "smaller" ? self.imagesBoundaries.height.smaller : self.imagesBoundaries.height.taller
+      }
+
+      if(!self.resizeImages) {
+        mainElementMeasures['maxWidth'] == "smaller" ?
+        self.imagesBoundaries.width.smaller :
+        self.imagesBoundaries.width.wider;
+      }
+
+      self.slidesOffsets = methods.getOffsets(self.mainElementMeasures.width, self.mainElementMeasures.height, self.elements);
+      var mainCss = {
+          position    : 'relative',
+          'text-align': 'center',
+          overflow    : 'hidden',
+          height      : String(self.mainElementMeasures.height) + 'px',
+          width       : 'inherit',
+      }
+      if (!self.resizeImages) {
+        mainCss['max-width'] = String(self.mainElementMeasures.maxWidth) + 'px';
+      }
+      $(self.mainElement).css(mainCss);
+
+      methods.setImagesCss({
+        resizeImages   : self.resizeImages,
+        verticalOffset : self.slidesOffsets.verticalOffset,
+        elements       : self.elements
+      });
+
+      var elementsCss = {
+        'left' : String(self.slidesOffsets.horizontalOffset[self.currentElement])+'px',
       };
 
-      if(resizeImages) {
-        mainElementMeasures['maxWidth'] = imagesBoundaries.width.wider;
-        mainElementMeasures['height']   = 'inherit';
-      } else {
-        mainElementMeasures['maxWidth'] = baseWidth == "smaller" ?
-        imagesBoundaries.width.smaller :
-        imagesBoundaries.width.wider;
-      }
-
-      var widthForOffset = mainElementMeasures.width > mainElementMeasures.maxWidth ?
-                           mainElementMeasures.maxWidth :
-                           mainElementMeasures.width;
-      var slidesOffsets = methods.getOffsets((widthForOffset), mainElementMeasures.height, elements);
-      //console.log(typeof $(elements), typeoff $(elements[0]), typeof elements, typeof elements[0]);
-
-      function leftButtonClickHandler() {
-
-        if (isTransitioning) {
-          return;
-        }
-        isTransitioning = true;
-
-        var centerValue = slidesOffsets.horizontalOffset[currentElement];
-        var leavingElement = $(elements[currentElement--]);
-        var leavingFinalPosition = $(leavingElement).width() + centerValue ;
-        leavingElement.animate({
-          left: '+='+String(leavingFinalPosition+"px")},
-          300,
-          function() {
-            isTransitioning = false;
-            leavingElement.hide();
-          });//completed});
-
-        var numOfSlides = elements.length;
-        if (currentElement < 0) {
-            currentElement = elements.length - 1;
-        }
-
-        var entryingInitialPosition = -($(elements[currentElement]).width()) + centerValue;
-        var entryingfinalPosition = entryingInitialPosition*-1 + slidesOffsets.horizontalOffset[currentElement];
-
-        $(mainElement).data('selected', String(currentElement));
-        $(elements[currentElement])
-          .show()
-          .css({
-            'left':String(entryingInitialPosition+'px')
-          })
-          .animate({
-            left: '+='+String(entryingfinalPosition)
-          },
-          300,
-          function(){
-            isTransitioning = false;
-          });//completed});
-      }
-
-      function rightButtonClickHandler() {
-
-        if (isTransitioning) {
-          return;
-        }
-        isTransitioning = true;
-
-        var centerValue = slidesOffsets.horizontalOffset[currentElement];
-        var leavingElement = $(elements[currentElement++]);
-        var leavingFinalPosition = -($(leavingElement).width() + centerValue);
-        leavingElement.animate({
-          left: '+='+String(leavingFinalPosition+"px")},
-          300,
-          function() {
-            isTransitioning = false;
-            leavingElement.hide();
-          });//completed});
-
-        var numOfSlides = elements.length;
-        if (currentElement >= numOfSlides) {
-            currentElement = 0;
-        }
-        var entryingInitialPosition = ($(leavingElement).width() + centerValue);
-        var entryingfinalPosition = entryingInitialPosition*-1 + slidesOffsets.horizontalOffset[currentElement];
-
-        $(mainElement).data('selected', String(currentElement));
-        $(elements[currentElement])
-          .show()
-          .css({
-            'left':String(entryingInitialPosition+'px')
-          })
-          .animate({
-            left: '+='+String(entryingfinalPosition)
-          },
-          300,
-          function(){
-            isTransitioning = false;
-          });//completed});
-      }
-
-      methods.instanceButtons(mainElement, rightButtonClickHandler, leftButtonClickHandler, buttonsStyle);
-      initialize(mainElement, elements, mainElementMeasures.maxWidth, mainElementMeasures.height, slidesOffsets.horizontalOffset, slidesOffsets.verticalOffset, resizeImages);
-      if (resizeImages) {
-        onResizeHandler();
-      }
-
-      function onResizeHandler() {
-
-        imagesBoundaries = methods.getImagesBounds(elements);
-        var mainElementMeasures = {
-          width:  $(mainElement).innerWidth(),
-          height: baseHeight == "smaller" ? imagesBoundaries.height.smaller : imagesBoundaries.height.taller
-        }
-
-        if(!resizeImages) {
-          mainElementMeasures['maxWidth'] == "smaller" ?
-          imagesBoundaries.width.smaller :
-          imagesBoundaries.width.wider;
-        }
-
-        slidesOffsets = methods.getOffsets(mainElementMeasures.width, mainElementMeasures.height, elements);
-
-        var mainCss = {
-            position    : 'relative',
-            'text-align': 'center',
-            overflow    : 'hidden',
-            height      : String(mainElementMeasures.height) + 'px',
-            width       : 'inherit',
-        }
-        if (!resizeImages) {
-          mainCss['max-width'] = String(mainElementMeasures.maxWidth) + 'px';
-        }
-        $(mainElement).css(mainCss);
-
-        methods.setImagesCss({
-          resizeImages   : resizeImages,
-          verticalOffset : slidesOffsets.verticalOffset,
-          elements       : elements
-        });
-
-        var elementsCss = {
-          'left' : String(slidesOffsets.horizontalOffset[currentElement])+'px',
-        };
-
-        $(elements[currentElement]).css(elementsCss);
-      }
-
-      $(window).bind('resize', onResizeHandler);
-    });
+      $(self.elements[self.currentElement]).css(elementsCss);
+    }
   }
 
-  /*$.fn.xexeuCarousel = function(options) {
+  $.fn.xexeuCarousel = function(options) {
     var opts = $.extend( {}, $.fn.xexeuCarousel.options, options );
     return this.each(function() {
 
        var carousel = Object.create(XexeuCarousel);
-       carousel.initialize(opts, this);
+       carousel.bootstrap(opts, this);
 
     });
   }
@@ -350,6 +353,6 @@
     baseWidth: "smaller", //"wider"
     autoChange: true, //false
     resizeImages: true, //false
-  }*/
+  }
 
 }(jQuery));
