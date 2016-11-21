@@ -29,17 +29,17 @@ So far, it only supports images inside the main container. Of course I plan on c
 
   _You can add classes but don't change these classes and ids above_.
 
-  Use ``data-controll=""`` to indicate which kind of controll you wanna use.
+  Use ``data-controll=""`` to indicate which kind of controll you want to use.
   In this moment just support _arrows_.
 
   **Full Code**
   ```html
-  <div class="carousel-container" data-controll="arrows">
+  <div class="carousel-container">
     <img src="img/3.jpg" alt="" />
     <img src="img/2.jpg" alt="" />
     <img src="img/1.png" alt="" />
   </div>
-  <div class="xexeu-carousel-btn">
+  <div class="xexeu-carousel-btn" data-controll="arrows">
     <button id="leftArrow">Left</button>
     <button id="rightArrow">Right</button>
   </div>
@@ -47,19 +47,19 @@ So far, it only supports images inside the main container. Of course I plan on c
 
 ###Style arrows
 
-  Exist two methods to styleze your arrow button:
+Exist two methods to stylize your arrow button:
 
-  ####First
+####First
 
-    Just add a class or id in the xexeu-carousel-btn container and stylezer as you want.
+Just add a class or id in the xexeu-carousel-btn container and stylize as you want.
 
-  ####Second
+####Second
 
-    You can pass a parameter in the xexeuCarousel function that is a object with the
-    ``styleButton`` property which receive two properties _active_ and _styleze_.
+You can pass a parameter in the xexeuCarousel function that is a object with the
+``styleButton`` property which receive two properties _active_ and _styleze_.
 
-    ``active`` property is to indicate the status from arrow's style.
-    ``styleze`` property is to input the css in the buttons.
+``active`` property is to indicate the status from arrow's style.
+``styleze`` property is to input the css in the buttons.
 
   ```javascript
   $('#xexeuContainer').xexeuCarousel({
