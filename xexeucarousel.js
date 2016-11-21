@@ -109,24 +109,73 @@
     },
     instanceButtons: function(mainElement, rightHandler, leftHandler, buttonsStyle) {
 
-        var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
-        var buttonRight =  $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></button>");
+        if(buttonsStyle.buttons != undefined){
+            switch (buttonsStyle.controll) {
+              case "arrows":
+
+                  var buttonLeft = buttonsStyle.buttons.querySelector("#leftArrow");
+                  var buttonRight = buttonsStyle.buttons.querySelector("#rightArrow");
+
+                  if(buttonsStyle.custom != undefined && buttonsStyle.custom.styleButton.active){
+
+                    buttonLeft.style.cssText=buttonsStyle.positionLeft+buttonsStyle.custom.styleButton.styleze;
+                    buttonRight.style.cssText=buttonsStyle.positionRight+buttonsStyle.custom.styleButton.styleze;
+
+                  }else{
+
+                      buttonLeft.style.cssText=buttonsStyle.positionLeft;
+                      buttonRight.style.cssText=buttonsStyle.positionRight;
+
+                  }
+
+                  console.info('Controll: '+buttonsStyle.controll+' active');
+
+                break;
+              default:
+
+            }
+        }else{
+
+            var buttonLeft = $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionLeft+" '><i class='fa fa-chevron-left' style=' "+buttonsStyle.color+" '></i></button>");
+            var buttonRight =  $("<button class='xexeu-carousel-btn' type='button' style=' "+buttonsStyle.positionRight+" '><i class='fa fa-chevron-right' style=' "+buttonsStyle.color+" '></i></button>");
+        }
+
 
         $(mainElement).append(buttonLeft);
         $(mainElement).append(buttonRight);
+
 
         $(buttonLeft).bind('click', leftHandler);
         $(buttonRight).bind('click', rightHandler);
     }
   }
 
-  $.fn.xexeuCarousel = function() {
+  $.fn.xexeuCarousel = function(custom) {
 
-    var buttonsStyle = {
-      color         : "color: white",
-      positionLeft  : "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);",
-      positionRight : "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);"
-    };
+    var styleLeft = "position: absolute; top: 50%; left: 10px; transform: translateY(-50%);";
+    var styleRight = "position: absolute; top: 50%; right: 10px; transform: translateY(-50%);";
+
+    var buttonHTML = document.querySelector('.xexeu-carousel-btn');
+    if(buttonHTML != null){
+        buttonHTML.style="display:none;"
+
+        var buttonControll = buttonHTML.dataset.controll;
+        console.log(buttonHTML);
+          var buttonsStyle = {
+            controll      : buttonControll,
+            buttons       : buttonHTML,
+            positionLeft  : styleLeft,
+            positionRight : styleRight,
+            custom        : custom
+          };
+
+    }else{
+        var buttonsStyle = {
+          color         : "color: white",
+          positionLeft  : styleLeft,
+          positionRight : styleRight
+        };
+    }
 
     var transitionStyle = {
       type  : 'swipe',
